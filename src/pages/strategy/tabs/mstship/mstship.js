@@ -1,8 +1,6 @@
 (function(){
 	"use strict";
 	
-	var loadedShipId = 0;
-	
 	KC3StrategyTabs.mstship = new KC3StrategyTab("mstship");
 	
 	KC3StrategyTabs.mstship.definition = {
@@ -121,16 +119,16 @@
 				}
 				
 				$(".shipName", shipBox).text( "["+ShipData.api_id+"] "+KC3Meta.shipName(ShipData.api_name) );
-					
+
 				shipBox.appendTo(".tab_mstship .shipRecords");
 			});
 			
 			// Select ship
 			$(".tab_mstship .shipRecords .shipRecord").on("click", function(){
-				if( $(this).data("id") != loadedShipId ){
-					var sid = $(this).data("id");
+				var sid = $(this).data("id");
+				if( sid != self.currentShipId ){
 					window.location.hash = KC3StrategyTabs.pageParams[0]+"-"+sid;
-					self.showShip( sid );
+					//self.showShip( sid );
 				}
 			});
 			
@@ -162,7 +160,7 @@
 				//console.log("clicked remodel");
 				var sid = $(this).data("sid");
 				window.location.hash = KC3StrategyTabs.pageParams[0]+"-"+sid;
-				self.showShip( sid );
+				//self.showShip( sid );
 				e.preventDefault();
 				return false;
 			});
@@ -170,7 +168,7 @@
 			$(".tab_mstship .shipInfo").on("click", ".more .other_forms a", function(e){
 				var sid = $(this).data("sid");
 				window.location.hash = KC3StrategyTabs.pageParams[0]+"-"+sid;
-				self.showShip( sid );
+				//self.showShip( sid );
 				e.preventDefault();
 				return false;
 			});
@@ -190,7 +188,7 @@
 			$(".tab_mstship .shipInfo").on("click", ".salty-zone", function(e){
 				var
 					saltList = ConfigManager.salt_list,
-					shipData = KC3Master.ship(loadedShipId),
+					shipData = KC3Master.ship(self.currentShipId),
 					saltPos  = saltList.indexOf(shipData.kc3_bship),
 					shipBox  = $(".shipRecord").filter(function(i,x){
 						return shipData.kc3_bship == $(x).data('bs');
@@ -211,13 +209,13 @@
 			if(!!KC3StrategyTabs.pageParams[1]){
 				this.showShip(KC3StrategyTabs.pageParams[1]);
 			}else{
-				this.showShip(323);
+				this.showShip();
 			}
 		},
 		
 		
 		showShip :function(ship_id){
-			ship_id = 1*(ship_id||"323");
+			ship_id = 1*(ship_id||"405");
 			var
 				self = this,
 				shipData = KC3Master.ship(ship_id),
@@ -238,7 +236,6 @@
 			this.currentShipId = ship_id;
 			console.log(shipData);
 			if(!shipData) { return; }
-			loadedShipId = ship_id;
 			
 			$(".tab_mstship .shipInfo .name").text( "[{0}] {1}".format(ship_id, KC3Meta.shipName( shipData.api_name )) );
 			
