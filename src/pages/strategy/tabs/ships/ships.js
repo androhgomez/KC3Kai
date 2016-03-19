@@ -406,11 +406,8 @@
 					$(".ship_img .ship_icon", cElm).attr("src", KC3Meta.shipIcon(cShip.bid));
 					if(config.kanmusuPic && shipLevel >= 100)
 						$(".ship_img .ship_kekkon", cElm).attr("src","tabs/ships/SEGASonicRing.png").show();
-					$(".ship_img .ship_link", cElm).attr("href", "#mstship-"+cShip.bid);
-					$(".ship_img .ship_link", cElm).click(function(e) {
-						window.location.hash = $(this).attr("href").substring(1);
-						return false;
-					});
+					$(".ship_img .ship_icon", cElm).attr("alt", cShip.bid);
+					$(".ship_img .ship_icon", cElm).click(self.shipClickFunc);
 					$(".ship_name", cElm).text( cShip.english );
 					if(shipLevel >= 100) {
 						if(config.kanmusuName)
@@ -489,6 +486,14 @@
 			},100);
 		},
 		
+		shipClickFunc: function(e){
+			KC3StrategyTabs.gotoTab("mstship", $(this).attr("alt"));
+		},
+
+		gearClickFunc: function(e){
+			KC3StrategyTabs.gotoTab("mstgear", $(this).attr("alt"));
+		},
+
 		/* Compute Derived Stats without Equipment
 		--------------------------------------------*/
 		getDerivedStatNaked :function(StatName, EquippedValue, Items){
@@ -523,9 +528,7 @@
 					.attr("src", "../../assets/img/items/" + gear.master().api_type[3] + ".png")
 					.attr("title", gear.name())
 					.attr("alt", gear.master().api_id);
-				$("img",element).click(function(){
-					KC3StrategyTabs.gotoTab("mstgear", $(this).attr("alt"));
-				});
+				$("img",element).click(this.gearClickFunc);
 				$("span",element).css('visibility','hidden');
 			} else {
 				$("img",element).hide();
