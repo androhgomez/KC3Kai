@@ -127,7 +127,7 @@
 			$(".tab_mstship .shipRecords .shipRecord").on("click", function(){
 				var sid = $(this).data("id");
 				if( sid != self.currentShipId ){
-					window.location.hash = KC3StrategyTabs.pageParams[0]+"-"+sid;
+					KC3StrategyTabs.gotoTab(null, sid);
 					//self.showShip( sid );
 				}
 			});
@@ -159,7 +159,7 @@
 			$(".tab_mstship .shipInfo").on("click", ".remodel_name a", function(e){
 				//console.log("clicked remodel");
 				var sid = $(this).data("sid");
-				window.location.hash = KC3StrategyTabs.pageParams[0]+"-"+sid;
+				KC3StrategyTabs.gotoTab(null, sid);
 				//self.showShip( sid );
 				e.preventDefault();
 				return false;
@@ -167,7 +167,7 @@
 			// On-click other forms
 			$(".tab_mstship .shipInfo").on("click", ".more .other_forms a", function(e){
 				var sid = $(this).data("sid");
-				window.location.hash = KC3StrategyTabs.pageParams[0]+"-"+sid;
+				KC3StrategyTabs.gotoTab(null, sid);
 				//self.showShip( sid );
 				e.preventDefault();
 				return false;
@@ -326,7 +326,7 @@
 								.attr("src","../../../../assets/img/items/"+equipment.api_type[3]+".png");
 							$(".sloticon img", this).attr("alt", equipId);
 							$(".sloticon img", this).click(function(){
-								window.location.hash = "mstgear-" + $(this).attr("alt");
+								KC3StrategyTabs.gotoTab("mstgear", $(this).attr("alt"));
 							});
 							$(".sloticon img", this).show();
 						} else {

@@ -69,7 +69,7 @@
 				$(".ship_pic img", shipBox).attr("src", KC3Meta.shipIcon( thisShip.masterId ) );
 				$(".ship_pic img", shipBox).attr("alt", thisShip.masterId );
 				$(".ship_pic img", shipBox).click(function(){
-					window.location.hash = "mstship-" + $(this).attr("alt");
+					KC3StrategyTabs.gotoTab("mstship", $(this).attr("alt"));
 				});
 				$(".ship_lv_val", shipBox).text( thisShip.level );
 				$(".ship_name", shipBox).text( thisShip.name() );
@@ -91,7 +91,7 @@
 				$("img", gearBox).attr("src", "../../assets/img/items/"+masterItem.api_type[3]+".png");
 				$("img", gearBox).attr("alt", masterItem.api_id);
 				$("img", gearBox).click(function(){
-					window.location.hash = "mstgear-" + $(this).attr("alt");
+					KC3StrategyTabs.gotoTab("mstgear", $(this).attr("alt"));
 				});
 				$(".gear_name", gearBox).text( thisItem.name() );
 			}else{
