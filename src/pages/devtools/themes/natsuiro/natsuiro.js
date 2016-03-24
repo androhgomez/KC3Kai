@@ -493,6 +493,8 @@
 		
 		// Update Timer UIs
 		setInterval(function(){
+			console.log("Timer tick "+(Math.floor(new Date().getTime()/1000)));
+			
 			// Basic Timer Stat
 			KC3TimerManager.update();
 			
