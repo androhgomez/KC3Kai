@@ -20,11 +20,11 @@ body {
 -------------------------------*/
 #menu {
 	z-index: 10;
-	position:absolute;
-	top:80px;
 	width:100px;
 }
 #menu .menutable {
+	position:absolute;
+	top:80px;
 	background:#fff;
 	float:left;
 }
