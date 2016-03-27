@@ -11,87 +11,108 @@
 		<link rel="shortcut icon" href="../../assets/img/logo/48.png" type="image/x-icon" />
 	</head>
 	<body>
+        <!-- MENU -->
+				
 		<div id="wrapper">
+            <div id="menu">
+                    <table><tr>
+                    <td>
+				    <div class="logo">
+					    <img src="../../assets/img/logo/128.png" />
+				    </div>
+                    </td>
+                    <td>
+                    <table class="menutable"><tr>
+                        <td>
+					        <div class="submenu">
+						        <div class="title">Player</div>
+						        <ul class="menulist">
+							        <li data-id="profile" class="active">Profile</li>
+							        <!-- <li data-id="newsfeed">Newsfeed</li> -->
+							        <li data-id="screenshots">Screenshots</li>
+							        <li data-id="resources">Resources</li>
+							        <li data-id="consumables">Consumables</li>
+							        <li data-id="showcase">Showcase</li>
+							        <li data-id="overlodger">Ledger</li>
+							        <li data-id="databackup">Data Backup</li>
+						        </ul>
+					        </div>
+                        </td>
+                        <td>
+					        <div class="submenu">
+						        <div class="title">Ships</div>
+						        <ul class="menulist">
+							        <li data-id="ships">Ship List</li>
+							        <li data-id="builds">Construction</li>
+							        <li data-id="lscs">LSC</li>
+							        <li data-id="docking">Docking</li>
+							        <li data-id="expcalc">Leveling</li>
+							        <li data-id="badge">Badge</li>
+						        </ul>
+					        </div>
+                        </td>
+                        <td>
+					        <div class="submenu">
+						        <div class="title">Equipment</div>
+						        <ul class="menulist">
+							        <li data-id="gears">Equipment List</li>
+							        <li data-id="crafts">Crafting</li>
+							        <li data-id="aircraft">Aircraft</li>
+							        <li data-id="akashi">Akashi</li>
+						        </ul>
+					        </div>
+					    </td>
+                        <td>
+                            <div class="submenu">
+						        <div class="title">Fleet</div>
+						        <ul class="menulist">
+							        <li data-id="fleet">Current</li>
+							        <li data-id="wikia">Export</li>
+							        <li data-id="locking">Locking</li>
+							        <!-- <li data-id="aircalc">AirCalc</li> -->
+							        <li data-id="presets">Presets</li>
+						        </ul>
+					        </div>
+					    </td>
+                        <td>
+                            <div class="submenu">
+						        <div class="title">Sortie</div>
+						        <ul class="menulist">
+							        <li data-id="maps">Maps</li>
+							        <li data-id="event">Events</li>
+							        <li data-id="encounters">Encounters</li>
+						        </ul>
+					        </div>
+					    </td>
+                        <td>
+                            <div class="submenu">
+						        <div class="title">Expeditions</div>
+						        <ul class="menulist">
+							        <li data-id="expedpast">History</li>
+							        <li data-id="expedtable">Scorer</li>
+						        </ul>
+                                <div class="title_sub">Quests</div>
+						        <ul class="menulist">
+							        <li data-id="flowchart">Flowchart</li>
+						        </ul>
+					        </div>
+					    </td>
+                        <td>
+                            <div class="submenu">
+						        <div class="title">Library</div>
+						        <ul class="menulist">
+							        <li data-id="mstupdate">Updates</li>
+							        <li data-id="mstship">Ships</li>
+							        <li data-id="mstgear">Equipment</li>
+						        </ul>
+					        </div>
+                    </tr></table>
+                    </td></tr></table>
+
+				</div>
 			<div id="error" class="alert alert-danger"></div>
 			<div id="body">
-				<!-- MENU -->
-				<div id="menu">
-					<div class="logo">
-						<img src="../../assets/img/logo/128.png" />
-					</div>
-					<div class="submenu">
-						<div class="title">Player</div>
-						<ul class="menulist">
-							<li data-id="profile" class="active">Profile</li>
-							<!-- <li data-id="newsfeed">Newsfeed</li> -->
-							<li data-id="screenshots">Screenshots</li>
-							<li data-id="resources">Resources</li>
-							<li data-id="consumables">Consumables</li>
-							<li data-id="showcase">Showcase</li>
-							<li data-id="overlodger">Ledger</li>
-							<li data-id="databackup">Data Backup</li>
-						</ul>
-					</div>
-					<div class="submenu">
-						<div class="title">Ships</div>
-						<ul class="menulist">
-							<li data-id="ships">Ship List</li>
-							<li data-id="builds">Construction</li>
-							<li data-id="lscs">LSC</li>
-							<li data-id="docking">Docking</li>
-							<li data-id="expcalc">Leveling</li>
-							<li data-id="badge">Badge</li>
-						</ul>
-					</div>
-					<div class="submenu">
-						<div class="title">Equipment</div>
-						<ul class="menulist">
-							<li data-id="gears">Equipment List</li>
-							<li data-id="crafts">Crafting</li>
-							<li data-id="aircraft">Aircraft</li>
-							<li data-id="akashi">Akashi</li>
-						</ul>
-					</div>
-					<div class="submenu">
-						<div class="title">Fleet</div>
-						<ul class="menulist">
-							<li data-id="fleet">Current</li>
-							<li data-id="wikia">Export</li>
-							<li data-id="locking">Locking</li>
-							<!-- <li data-id="aircalc">AirCalc</li> -->
-							<li data-id="presets">Presets</li>
-						</ul>
-					</div>
-					<div class="submenu">
-						<div class="title">Quests</div>
-						<ul class="menulist">
-							<li data-id="flowchart">Flowchart</li>
-						</ul>
-					</div>
-					<div class="submenu">
-						<div class="title">Sortie</div>
-						<ul class="menulist">
-							<li data-id="maps">Maps</li>
-							<li data-id="event">Events</li>
-						</ul>
-					</div>
-					<div class="submenu">
-						<div class="title">Expeditions</div>
-						<ul class="menulist">
-							<li data-id="expedpast">History</li>
-							<li data-id="expedtable">Scorer</li>
-						</ul>
-					</div>
-					<div class="submenu">
-						<div class="title">Library</div>
-						<ul class="menulist">
-							<li data-id="mstupdate">Updates</li>
-							<li data-id="mstship">Ships</li>
-							<li data-id="mstgear">Equipment</li>
-							<li data-id="encounters">Encounters</li>
-						</ul>
-					</div>
-				</div>
+				
 
 				<!-- CONTENT -->
 				<div id="content">
