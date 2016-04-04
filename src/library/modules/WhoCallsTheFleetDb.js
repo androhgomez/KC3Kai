@@ -37,13 +37,15 @@
 
 			this.db = db;
 		},
+
+		getShipStat: function(shipId) {
+			var entry = this.db["s"+shipId];
+			return !!entry ? entry.stat : false;
+		},
+
 		getStockEquipment: function(shipId) {
-			var ent = this.db["s"+shipId];
-			if (typeof(ent) !== 'undefined') {
-				return ent.equip;
-			} else {
-				return false;
-			}
+			var entry = this.db["s"+shipId];
+			return !!entry ? entry.equip : false;
 		}
 	};
 	
