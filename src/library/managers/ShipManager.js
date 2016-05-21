@@ -71,6 +71,22 @@ Saves and loads list to and from localStorage
 						cShip[key] = tempData[key];
 				});
 				
+				// enforce freshify sortie0 placeholder
+				(function(){
+					var szs = 'sortie0';
+					var ls  = cShip.lastSortie;
+					var cnt = 0;
+					var szi;
+					for(szi=0;szi<ls.length;szi++)
+						cnt += ls[szi]==szs;
+					while(cnt) {
+						for(szi=0;ls[szi]!=szs;szi++){}
+						ls.splice(szi,1);
+						cnt--;
+					}
+					ls.push(szs);
+				}).call(this);
+			} else {
 				// check ship master in lock_prep before lock request it
 				if(ConfigManager.lock_prep[0] == cShip.rosterId) {
 					ConfigManager.lock_prep.shift();
@@ -194,17 +210,29 @@ Saves and loads list to and from localStorage
 		
 		// Show JSON string of the list for debugging purposes
 		json: function(){
-			console.log(JSON.stringify(this.list));
+			console.log(this.encoded());
 		},
 		
 		// Save ship list onto local storage
 		clear: function(){
 			this.list = {};
 		},
+
+		encoded: function() {
+			var shiplistMinimized = {};
+			$.each(this.list, function(k,v) {
+				if (v instanceof KC3Ship) {
+					shiplistMinimized[k] = v.minimized();
+				} else {
+					shiplistMinimized[k] = v;
+				}
+			});
+			return JSON.stringify(shiplistMinimized);
+		},
 		
 		// Save ship list onto local storage
 		save: function(){
-			localStorage.ships = JSON.stringify(this.list);
+			localStorage.ships = this.encoded();
 		},
 		
 		// Load from storage and add each one to manager list

@@ -3,7 +3,7 @@
 
 	window.WhoCallsTheFleetDb = {
 		db: {},
-		expectedShipCount: 406,
+		expectedShipCount: 417,
 		init: function(repo) {
 			var rawDb = $.ajax({
 				url : repo + 'assets/js/WhoCallsTheFleetShipDb.json',
@@ -21,11 +21,11 @@
 				})
 				.filter( function(x) {return x;});
 			if (content.length < this.expectedShipCount) {
-				console.warn("Unexpected entity number, "+
+				console.warn("Unexpected entity number,",
 							 "WhoCallsTheFleetShipDb.json might has been changed.");
 			} else if(content.length > this.expectedShipCount) {
-				console.info("WhoCallsTheFleetShipDb.json has been updated, " +
-							 "commit `expectedShipCount: " + content.length + 
+				console.info("WhoCallsTheFleetShipDb.json has been updated,",
+							 "commit `expectedShipCount: " + content.length +
 							 ",` instead of `" + this.expectedShipCount + "` plz.");
 				this.expectedShipCount = content.length;
 			}
@@ -37,13 +37,23 @@
 
 			this.db = db;
 		},
+
+		getShipStat: function(shipId) {
+			var entry = this.db["s"+shipId];
+			return !!entry ? entry.stat : false;
+		},
+
 		getStockEquipment: function(shipId) {
-			var ent = this.db["s"+shipId];
-			if (typeof(ent) !== 'undefined') {
-				return ent.equip;
-			} else {
-				return false;
-			}
+			var entry = this.db["s"+shipId];
+			return !!entry ? entry.equip : false;
+		},
+
+		getLoSInfo: function(shipId) {
+			var entry = this.db["s"+shipId];
+			return !!entry ? {
+					base: entry.stat.los,
+					max: entry.stat.los_max 
+				} : false;
 		}
 	};
 	

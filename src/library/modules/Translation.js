@@ -41,9 +41,9 @@
 				
 				default: break;
 			}
-			
+
 			if(fontFamily){ $("body").css("font-family", fontFamily); }
-			
+
 			// Apply HTML language code
 			$("html").attr("lang", ConfigManager.language);
 		},
@@ -83,7 +83,7 @@
 			// Check if desired to extend english files
 			if (typeof extendEnglish=="undefined") { extendEnglish=false; }
 			if (typeof track_source==="undefined") { track_source = false; }
-			
+
 			// Japanese special case where ships and items sources are already in JP
 			if(
 				(["jp", "tcn"].indexOf(language) > -1)
@@ -103,17 +103,30 @@
 			}
 
 			var translationBase = {}, enJSON;
-			if(extendEnglish && language!="en"){
+			if(extendEnglish && language!=="en"){
 				// Load english file
-				enJSON = JSON.parse($.ajax({
-					url : repo+'lang/data/en/' + filename + '.json',
-					async: false
-				}).responseText);
+				try {
+					enJSON = JSON.parse($.ajax({
+						url : repo+'lang/data/en/' + filename + '.json',
+						async: false
+					}).responseText);
 
-				if (track_source) {
-					self.addTags(enJSON, "en");
+					if (track_source) {
+						self.addTags(enJSON, "en");
+					}
+				} catch (e) {
+					console.error(e.stack);
+					var errMsg = $("<p>Fatal error when loading {0} en TL data: {1}</p>" +
+						"<p>Contact developers plz! &gt;_&lt;</p>".format(filename, e));
+					if($("#error").length>0){
+						$("#error").append(errMsg);
+						$("#error").show();
+					} else {
+						$(document.body).append(errMsg);
+					}
+					throw e;
 				}
-				
+
 				// Make is as the translation base
 				translationBase = enJSON;
 			}
@@ -131,10 +144,28 @@
 					self.addTags(translation, language);
 				}
 			} catch (e) {
-				if (e instanceof SyntaxError && extendEnglish && language!="en"){
-					console.warn(e.stack);
+				// As EN can be used, fail-safe for other JSON syntax error
+				if (e instanceof SyntaxError && extendEnglish && language!=="en"){
+					console.warn(e.stack);/*RemoveLogging:skip*/
 					translation = null;
+					// Show error message for Strategy Room
+					if($("#error").length>0){
+						$("#error").append(
+							$("<p>Syntax error on {0} TL data of {1}: {2}</p>".format(filename, language, e.message))
+						);
+						$("#error").show();
+					}
 				} else {
+					// Unknown error still needs to be handled asap
+					console.error(e.stack);/*RemoveLogging:skip*/
+					var errMsg = $("<p>Fatal error when loading {0} TL data of {1}: {2}</p>" +
+						"<p>Contact developers plz! &gt;_&lt;</p>".format(filename, language, e));
+					if($("#error").length>0){
+						$("#error").append(errMsg);
+						$("#error").show();
+					} else {
+						$(document.body).append(errMsg);
+					}
 					throw e;
 				}
 			}
@@ -198,12 +229,11 @@
 		// see initialization code below.
 		_idToDesc: null,
 
-
 		// descriptive voice key to numeric one
 		voiceDescToNum: function(k) {
 			return this._descToId[k];
 		},
-	
+
 		// numeric voice key to descriptive one
 		voiceNumToDesc: function(k) {
 			return this._idToDesc[k];
@@ -241,7 +271,7 @@
 		},
 
 		// insert quote id as key if descriptive key is used.
-		transformQuotes: function(quotes) {
+		transformQuotes: function(quotes, checkKey) {
 			var self = this;
 			function isIntStr(s) {
 				return parseInt(s,10).toString() === s;
@@ -258,16 +288,15 @@
 					var subId = self.voiceDescToNum(subKey);
 					if (subId) {
 						// force overwriting regardless of original content
-
 						// empty content not replaced
 						if (v[subKey] && v[subKey].length) {
 							v[subId] = v[subKey];
 						}
 					} else {
-						if (! isIntStr(subKey) ) {
+						if (!!checkKey && ! isIntStr(subKey) ) {
 							// neither a descriptive key nor a normal number
-							console.warn( "Unrecognized subtitle key: " + subKey
-										  + " (masterId=" + k + ")");
+							console.debug( "Not transformed subtitle key:", subKey,
+								"(masterId=", k, ")");
 						}
 					}
 				});
@@ -276,7 +305,7 @@
 			return quotes;
 		},
 
-		getQuotes: function(repo, track) {
+		getQuotes: function(repo, track, language) {
 			var self = this;
 			if (typeof track === "undefined")
 				track = false;
@@ -284,8 +313,8 @@
 			// we always use English version quotes as the base,
 			// assuming all quotes are complete so there
 			// is no need to extend the table by considering pre-remodel ship quotes.
-			var	enJSON = {};
-			var language = ConfigManager.language;
+			var enJSON = {};
+			language = language || ConfigManager.language;
 			try {
 				enJSON = JSON.parse($.ajax({
 					url : repo+'lang/data/en/quotes.json',
@@ -296,48 +325,57 @@
 				}
 			} catch(e) {
 				if (e instanceof SyntaxError){
-					console.warn(e.stack);
+					console.warn(e.stack);/*RemoveLogging:skip*/
 					translation = null;
 				} else {
 					throw e;
 				}
 			}
 
-			// if it's already English the we are done.
-			if (language === "en") return enJSON;
-			
-			// load language specific quotes.json
 			var langJSON;
-			try {
-				langJSON = JSON.parse($.ajax({
-					url : repo+'lang/data/' +language+ '/quotes.json',
-					async: false
-				}).responseText);
-			} catch (e) {
-				console.warn("failed to retrieve language specific quotes.");
-				if (e instanceof SyntaxError){
-					console.warn(e.stack);
-					console.log("falling back to eng version");
-					return enJSON;
-				} else {
-					throw e;
+			if (language === "en") {
+				// if it's already English the we are done.
+				langJSON = enJSON;
+			} else {
+				// load language specific quotes.json
+				try {
+					langJSON = JSON.parse($.ajax({
+						url : repo+'lang/data/' +language+ '/quotes.json',
+						async: false
+					}).responseText);
+				} catch (e) {
+					if (e instanceof SyntaxError){
+						console.warn(e.stack);/*RemoveLogging:skip*/
+						console.warn("Failed to load",language,"quotes, falling back to en version");
+						// Show unduplicated error message for Strategy Room
+						if($("#error").length>0 && $("#error").text().indexOf("quotes.json")<0){
+							$("#error").append(
+								$("<p>Syntax error on {0} quotes.json: {1}</p>".format(language, e.message))
+							);
+							$("#error").show();
+						}
+						langJSON = enJSON;
+						language = "en";
+					} else {
+						console.error(e.stack);/*RemoveLogging:skip*/
+						throw e;
+					}
 				}
 			}
 
 			// 1st pass: interpret descriptive keys as keys
 			this.transformQuotes(langJSON);
-			if (track) {
+			if (track && language !== "en") {
 				self.addTags(langJSON,language);
 			}
 
 			// extend quotes by reusing ship's pre-remodels
 			// 2nd pass: extend langJSON by considering pre-models
-			if (typeof RemodelDb !== "undefined" && typeof RemodelDb._db !== "undefined") {
+			if (typeof RemodelDb !== "undefined" && !!RemodelDb._db && !!RemodelDb._db.remodelGroups) {
 				$.each(RemodelDb._db.remodelGroups, function(orgShipIdStr,groupInfo) {
 					// a group of ship ids that consider as "same ship"
 					// sorted by remodels
 					var group = groupInfo.group;
-
 					var i,curShipId;
 					// accumulate quotes
 					var curQuotes = {};
@@ -361,11 +399,13 @@
 				});
 			} else {
 				console.warn("Translation: failed to load RemodelDb, " +
-							 "please make sure it's been initialized properly");
+							 "please make sure it's been initialized properly");/*RemoveLogging:skip*/
 			}
 
 			// 3rd pass: extend langJSON using enJSON to fill in any missing parts
-			langJSON = $.extend(true, {}, enJSON, langJSON);
+			if (language !== "en") {
+				langJSON = $.extend(true, {}, enJSON, langJSON);
+			}
 			return langJSON;
 		},
 

@@ -77,7 +77,13 @@
 			// combat ration
 			"t34": "overall",
 			// underway replenishment
-			"t35": "overall"
+			"t35": "overall",
+			// land tank
+			"t36": "overall",
+			// land base bomber
+			"t37": "dv",
+			// intercepting fighter
+			"t38": "aa"
 		},
 
 		/* Initialize comparators
@@ -117,10 +123,22 @@
 		},
 
 		/* INIT
-		Prepares all data needed
+		Prepares static data needed
 		---------------------------------*/
 		init :function(){
 			this.initComparator();
+		},
+
+		/* RELOAD
+		Prepares reloadable data
+		---------------------------------*/
+		reload :function(){
+			// Reload data from local storage
+			KC3ShipManager.load();
+			KC3GearManager.load();
+			// Clean old data
+			this._items = {};
+			this._holders = {};
 			// Compile equipment holders
 			var ctr, ThisItem, MasterItem, ThisShip, MasterShip;
 			for(ctr in KC3ShipManager.list){
@@ -128,6 +146,7 @@
 				this.checkShipSlotForItemHolder(1, KC3ShipManager.list[ctr]);
 				this.checkShipSlotForItemHolder(2, KC3ShipManager.list[ctr]);
 				this.checkShipSlotForItemHolder(3, KC3ShipManager.list[ctr]);
+				this.checkShipSlotForItemHolder(-1, KC3ShipManager.list[ctr]);
 			}
 
 			// Compile ships on Index
@@ -216,7 +235,11 @@
 		/* Check a ship's equipment slot of an item is equipped
 		--------------------------------------------*/
 		checkShipSlotForItemHolder :function(slot, ThisShip){
-			if(ThisShip.items[slot] > -1){
+			if(slot<0){
+				if(ThisShip.ex_item > 0){
+					this._holders["s"+ThisShip.ex_item] = ThisShip;
+				}
+			} else if(ThisShip.items[slot] > -1){
 				this._holders["s"+ThisShip.items[slot]] = ThisShip;
 			}
 		},
@@ -228,15 +251,7 @@
 			var self = this;
 
 			$(".tab_gears .item_type").on("click", function(){
-				$(".tab_gears .item_type").removeClass("active");
-				$(this).addClass("active");
-				var type_id = $(this).data("type");
-				self._currentTypeId = type_id;
-				var compareMethod = self._defaultCompareMethod["t"+type_id];
-				if (typeof compareMethod == "undefined")
-					compareMethod = "overall";
-				self.updateSorters(type_id);
-				self.showType(type_id, compareMethod);
+				KC3StrategyTabs.gotoTab(null, $(this).data("type"));
 			});
 
 			// setup sort methods
@@ -244,14 +259,27 @@
 			sortControls.push( "overall" );
 			sortControls.forEach( function(property,i) {
 				$(".tab_gears .itemSorters .sortControl." + property).on("click", function() {
-					var type_id = self._currentTypeId;
-					var compareMethod = property;
-					self.showType(type_id, compareMethod);
+					KC3StrategyTabs.gotoTab(null, self._currentTypeId, property);
 				});
 				
 			});
 
-			$(".tab_gears .item_type").first().trigger("click");
+			if(!!KC3StrategyTabs.pageParams[1]){
+				if(!!KC3StrategyTabs.pageParams[2]){
+					this.switchTypeAndSort(KC3StrategyTabs.pageParams[1], KC3StrategyTabs.pageParams[2]);
+				} else {
+					this.switchTypeAndSort(KC3StrategyTabs.pageParams[1]);
+				}
+			} else {
+				this.switchTypeAndSort($(".tab_gears .item_type").first().data("type"));
+			}
+		},
+
+		switchTypeAndSort: function(typeId, sortMethod) {
+			var compareMethod = sortMethod || this._defaultCompareMethod["t"+typeId] || "overall";
+			this.updateSorters(typeId);
+			this._currentTypeId = typeId;
+			this.showType(typeId, compareMethod);
 		},
 
 		/*
@@ -278,10 +306,10 @@
 			});
 
 			// grab stat from all available slotitems
-            function accumulateStats(statSets,ThisSlotitem) {
-                return function(p,i) {
-					statSets[p].push( ThisSlotitem.stats[p] );                    
-                };
+			function accumulateStats(statSets,ThisSlotitem) {
+				return function(p,i) {
+					statSets[p].push( ThisSlotitem.stats[p] );
+				};
 			}
 			
 			if (type_id === "all") {
@@ -336,6 +364,8 @@
 		/* Show slotitem type, with a compare method
 		--------------------------------------------*/
 		showType :function(type_id, compareMethod){
+			$(".tab_gears .item_type").removeClass("active");
+			$(".tab_gears .item_type[data-type={0}]".format(type_id)).addClass("active");
 			$(".tab_gears .item_list").html("");
 
 			var comparator = this._comparator[compareMethod];
@@ -366,6 +396,9 @@
 			}
 
 			var ctr, ThisType, ItemElem, ThisSlotitem;
+			var gearClickFunc = function(e){
+				KC3StrategyTabs.gotoTab("mstgear", $(this).attr("alt"));
+			};
 			var SlotItems = [];
 			var self = this;
 			if (type_id === "all") {
@@ -387,6 +420,8 @@
 			$.each(SlotItems, function(index,ThisSlotitem) {
 				ItemElem = $(".tab_gears .factory .slotitem").clone().appendTo(".tab_gears .item_list");
 				$(".icon img", ItemElem).attr("src", "../../assets/img/items/"+ThisSlotitem.type_id+".png");
+				$(".icon img", ItemElem).attr("alt", ThisSlotitem.id);
+				$(".icon img", ItemElem).on("click", gearClickFunc);
 				$(".english", ItemElem).text(ThisSlotitem.english);
 				$(".japanese", ItemElem).text(ThisSlotitem.japanese);
 				//$(".counts", ItemElem).html("You have <strong>"+(ThisSlotitem.held.length+ThisSlotitem.extras.length)+"</strong> (<strong>"+ThisSlotitem.held.length+"</strong> worn, <strong>"+ThisSlotitem.extras.length+"</strong> extras)");
@@ -397,7 +432,7 @@
 				});
 
 				var holderCtr, ThisHolder, HolderElem;
-				console.log(ThisSlotitem);
+				//console.log(ThisSlotitem);
 
 				for( var i in ThisSlotitem.arranged ){
 					$('<dl/>')

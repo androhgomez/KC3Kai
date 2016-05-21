@@ -259,6 +259,12 @@
 			$(".summary-eqlos .summary_text").text( Math.round(((selectedFleet < 5) ? PlayerManager.fleets[selectedFleet-1].eLoS() : PlayerManager.fleets[0].eLoS()+PlayerManager.fleets[1].eLoS()) * 100) / 100 );
 		}).addClass("hover");
 		
+		// Fighter Power Toggle
+		$(".summary-airfp").on("click",function(){
+			ConfigManager.scrollFighterPowerMode();
+			$(".summary-airfp .summary_text").text( (selectedFleet < 5) ? PlayerManager.fleets[selectedFleet-1].fighterPowerText() : PlayerManager.fleets[0].fighterPowerText() );
+		}).addClass("hover");
+		
 		// Timer Type Toggle
 		$(".status_docking,.status_akashi").on("click",function(){
 			ConfigManager.scrollTimerType();
@@ -294,7 +300,7 @@
 		/* Morale timers
 		- use end time difference not remaining decrements for accuracy against lag
 		--------------------------------------------*/
-		setInterval(function(){
+		window.KC3DevtoolsMoraleTimer = setInterval(function(){
 			// console.log(moraleClockValue, moraleClockEnd, moraleClockRemain);
 			if(moraleClockEnd > 0){
 				moraleClockRemain = Math.ceil( (moraleClockEnd - (new Date()).getTime())/1000);
@@ -447,7 +453,7 @@
 		]);
 		
 		// Update Timer UIs
-		setInterval(function(){
+		window.KC3DevtoolsUiTimers = setInterval(function(){
 			// Basic Timer Stat
 			KC3TimerManager.update();
 			
@@ -807,7 +813,7 @@
 				FleetSummary = {
 					lv: MainFleet.totalLevel() + EscortFleet.totalLevel(),
 					elos: Math.qckInt(null,MainFleet.eLoS()+EscortFleet.eLoS(),2),
-					air: Math.qckInt(null,MainFleet.fighterPower() + EscortFleet.fighterPower(),2),
+					air: MainFleet.fighterPowerText(),
 					speed:
 						(MainFleet.fastFleet && EscortFleet.fastFleet)
 						? KC3Meta.term("SpeedFast") : KC3Meta.term("SpeedSlow"),
@@ -1897,10 +1903,7 @@
 			var ExpdIncome = KEIB.getExpeditionIncomeBase(selectedExpedition);
 			var ExpdFleetCost = fleetObj.calcExpeditionCost( selectedExpedition );
 
-			var numLandingCrafts = fleetObj.countLandingCrafts();
-			if (numLandingCrafts > 4)
-				numLandingCrafts = 4;
-			var landingCraftFactor = 0.05*numLandingCrafts + 1;
+			var landingCraftFactor = fleetObj.calcLandingCraftBonus() + 1;
 			var greatSuccessFactor = plannerIsGreatSuccess ? 1.5 : 1;
 
 			$(".module.activity .activity_expeditionPlanner .estimated_time").text( String( 60*ExpdCost.time ).toHHMMSS() );
@@ -1926,13 +1929,17 @@
 					netResourceIncome -= ExpdFleetCost[v];
 				}
 
-				var tooltipText = String(ExpdIncome[v]);
-				if (landingCraftFactor > 1)
-					tooltipText += "*" + String(landingCraftFactor);
-				if (greatSuccessFactor > 1)
-					tooltipText += "*" + String(greatSuccessFactor);
+				var tooltipText = "{0} = {1}".format(netResourceIncome, incomeVal);
+				if (incomeVal > 0) {
+					tooltipText += "{=" + String(ExpdIncome[v]);
+					if (landingCraftFactor > 1)
+						tooltipText += "*" + String(landingCraftFactor);
+					if (greatSuccessFactor > 1)
+						tooltipText += "*" + String(greatSuccessFactor);
+					tooltipText += "}";
+				}
 				if (v === "fuel" || v === "ammo") {
-					tooltipText += "-" + String(ExpdFleetCost[v]);
+					tooltipText += " - " + String(ExpdFleetCost[v]);
 				}
 
 				jqObj.text( netResourceIncome );

@@ -8,6 +8,13 @@ KC3改 Ship Object
 		deferList = {};
 	
 	window.KC3Ship = function( data ){
+		// useful when making virtual ship objects.
+		// requirements:
+		// * "GearManager.get( itemId )" should get the intended equipment
+		// * "itemId" is taken from either "items" or "ex_item"
+		// * "shipId === -1 or 0" should always return a dummy gear
+		this.GearManager = null;
+
 		// Default object properties incuded in stringifications
 		this.rosterId = 0;
 		this.masterId = 0;
@@ -25,6 +32,10 @@ KC3改 Ship Object
 		this.lk = [0,0];
 		this.range = 0;
 		this.items = [-1,-1,-1,-1];
+        // ex_item correponses to "api_slot_ex" in the API,
+        // which has special meanings on few values:
+        // 0: ex slot is not available
+        // -1: ex slot is available but nothing is equipped
 		this.ex_item = 0;
 		this.slots = [0,0,0,0];
 		this.slotnum = 0;
@@ -114,6 +125,9 @@ KC3改 Ship Object
 		}
 	});
 	
+	KC3Ship.prototype.getGearManager = function() {
+		return this.GearManager ? this.GearManager : KC3GearManager;
+	};
 	KC3Ship.prototype.master = function(){ return KC3Master.ship( this.masterId ); };
 	KC3Ship.prototype.name = function(){ return KC3Meta.shipName( this.master().api_name ); };
 	KC3Ship.prototype.stype = function(){ return KC3Meta.stype( this.master().api_stype ); };
@@ -123,7 +137,7 @@ KC3改 Ship Object
 			case 'number':
 			case 'string':
 				/* Number/String => converted as equipment slot key */
-				return KC3GearManager.get( this.items[slot] );
+				return self.getGearManager().get( this.items[slot] );
 			case 'undefined':
 				/* Undefined => returns whole equipment as equip object */
 				return Array.apply(null, this.items)
@@ -132,12 +146,12 @@ KC3改 Ship Object
 			case 'function':
 				/* Function => iterates over given callback for every equipment */
 				return this.equipment().forEach(function(item,index){
-					slot.call(null,item.rosterId,index,item);
+					slot.call(null,item.itemId,index,item);
 				});
 		}
 	};
 	KC3Ship.prototype.isFast = function(){ return this.master().api_soku>=10; };
-	KC3Ship.prototype.exItem = function(){ return KC3GearManager.get(this.ex_item); };
+	KC3Ship.prototype.exItem = function(){ return this.getGearManager().get(this.ex_item); };
 	KC3Ship.prototype.isStriped = function(){ return (this.hp[1]>0) && (this.hp[0]/this.hp[1] <= 0.5); };
 	KC3Ship.prototype.isTaiha   = function(){ return (this.hp[1]>0) && (this.hp[0]/this.hp[1] <= 0.25) && !this.isRepaired(); };
 	KC3Ship.prototype.getDefer = function(){
@@ -267,11 +281,20 @@ KC3改 Ship Object
 	--------------------------------------------------------------*/
 	KC3Ship.prototype.nakedLoS = function(){
 		var MyNakedLos = this.ls[0];
-		if(this.items[0] > -1){ MyNakedLos -= this.equipment(0).master().api_saku; }
-		if(this.items[1] > -1){ MyNakedLos -= this.equipment(1).master().api_saku; }
-		if(this.items[2] > -1){ MyNakedLos -= this.equipment(2).master().api_saku; }
-		if(this.items[3] > -1){ MyNakedLos -= this.equipment(3).master().api_saku; }
+		MyNakedLos -= this.equipmentTotalLoS();
 		return MyNakedLos;
+	};
+
+	KC3Ship.prototype.equipmentTotalLoS = function () {
+		var sumLoS = 0;
+		var self = this;
+		$.each([0,1,2,3], function(_,ind) {
+			var item = self.equipment(ind);
+			if (item.masterId !== 0) {
+				sumLoS += item.master().api_saku; 
+			}
+		});
+		return sumLoS;
 	};
 
 	/* COUNT EQUIPMENT
@@ -294,13 +317,6 @@ KC3改 Ship Object
 		return this.countEquipment( 75 );
 	};
 
-	/* COUNT LANDING CRAFT
-	   Get number of landing crafts held
-	   ----------------------------------------- */
-	KC3Ship.prototype.countLandingCrafts = function(){
-		return this.countEquipment( 68 );
-	};
-	
 	/* FIND DAMECON
 	   Find first available damecon.
 	   search order: extra slot -> 1st slot -> 2ns slot -> 3rd slot -> 4th slot
@@ -327,6 +343,25 @@ KC3改 Ship Object
 							: 0};
 			});
 		return items.length > 0 ? items[0] : {pos: -1, code: 0};
+	};
+
+	/* CALCULATE TRANSPORT POINT
+	Retrieve TP object related to the current ship
+	** TP Object Detail --
+	   value: known value that were calculated for
+	   clear: is the value already clear or not? it's a NaN like.
+	**
+	--------------------------------------------------------------*/
+	KC3Ship.prototype.obtainTP = function() {
+		var tp = KC3Meta.tpObtained();
+		if (!(this.didFlee || this.isTaiha())) {
+			var tp1,tp2,tp3;
+			tp1 = String(tp.add(KC3Meta.tpObtained({stype:this.master().api_stype})));
+			tp2 = String(tp.add(KC3Meta.tpObtained({slots:this.equipment().map(function(slot){return slot.masterId;})})));
+			tp3 = String(tp.add(KC3Meta.tpObtained({slots:[this.exItem().masterId]})));
+			//console.log(this.name(),this.rosterId,tp1,tp2,tp3);
+		}
+		return tp;
 	};
 
 	/* FIGHTER POWER
@@ -442,6 +477,24 @@ KC3改 Ship Object
 	KC3Ship.prototype.performRepair = function(args) {
 		consumePending.call(this,1,{0:0,1:2,2:6,c: 1,i: 0},[0,1,2],args);
 	};
+
+	// preparation of data saving
+	// try to remove as much unnecessary fields as possible
+	KC3Ship.prototype.minimized = function() {
+		var ship = $.extend({},this);
+		delete ship.GearManager;
+		return ship;
+	};
+
+	// estimated LoS without equipments based on WhoCallsTheFleetDb
+	KC3Ship.prototype.estimateNakedLoS = function() {
+		var losInfo = WhoCallsTheFleetDb.getLoSInfo( this.masterId );
+		if (!losInfo || losInfo.base < 0 || losInfo.max < 0) return 0;
+		var retVal = losInfo.base + 
+			Math.floor((losInfo.max - losInfo.base) * this.level / 99.0);
+		return retVal;
+	};
+
 	function consumePending(index,mapping,clear,args) {
 		/*jshint validthis: true */
 		if(!(this instanceof KC3Ship)) {
