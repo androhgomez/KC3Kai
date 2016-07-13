@@ -520,7 +520,7 @@ Used by SortieManager
 					}
 				});
 			}).call(this,resultData.api_get_eventitem);
-			
+			// Entry point for ship drops
 			ConfigManager.load();
 			ship_get.forEach(function(newShipId){
 				var wish_kind = ["salt","wish"];

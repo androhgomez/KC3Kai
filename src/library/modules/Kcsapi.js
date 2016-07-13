@@ -878,8 +878,6 @@ Previously known as "Reactor"
 			KC3Network.trigger("Fleet");
 			KC3Network.trigger("BattleResult", response.api_data);
 			KC3Network.trigger("Quests");
-
-			/* entry point for lock reminder */
 			
 			KC3Network.delay(1,"Fleet","GearSlots");
 		},
