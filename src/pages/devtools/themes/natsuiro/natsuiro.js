@@ -965,6 +965,7 @@
 					hasTaiha: MainFleet.hasTaiha() || EscortFleet.hasTaiha(),
 					taihaIndexes: MainFleet.getTaihas().concat( EscortFleet.getTaihas() ),
 					supplied: MainFleet.isSupplied() && EscortFleet.isSupplied(),
+					supplyCost: MainFleet.calcResupplyCost(),
 					badState: [
 						MainFleet.needsSupply(false)|| EscortFleet.needsSupply(false),
 						MainFleet.needsSupply(true) || EscortFleet.needsSupply(true) ,
@@ -976,7 +977,10 @@
 						? MainFleet.lowestMorale() : EscortFleet.lowestMorale(),
 					supportPower: 0
 				};
-			
+				var escortSupplyCost = EscortFleet.calcResupplyCost();
+				FleetSummary.supplyCost.fuel += escortSupplyCost.fuel;
+				FleetSummary.supplyCost.ammo += escortSupplyCost.ammo;
+				FleetSummary.supplyCost.bauxite += escortSupplyCost.bauxite;
 			
 			// SINGLE
 			}else{
@@ -1015,6 +1019,7 @@
 					hasTaiha: CurrentFleet.hasTaiha(),
 					taihaIndexes: CurrentFleet.getTaihas(),
 					supplied: CurrentFleet.isSupplied(),
+					supplyCost: CurrentFleet.calcResupplyCost(),
 					badState: [
 						CurrentFleet.needsSupply(false) ||
 						(
@@ -1075,7 +1080,12 @@
 					$(".module.status .status_supply img").attr("src", "../../../../assets/img/ui/sunk.png");
 					$(".module.status .status_supply .status_text").addClass("bad");
 				}
-				
+				$(".module.status .status_supply").attr("title",
+					FleetSummary.supplied ? "": KC3Meta.term("PanelResupplyCosts").format(
+						FleetSummary.supplyCost.fuel, FleetSummary.supplyCost.ammo, FleetSummary.supplyCost.bauxite
+					)
+				);
+
 				// STATUS: MORALE
 				if( FleetSummary.lowestMorale > 54 ){
 					$(".module.status .status_morale .status_text").text( KC3Meta.term("PanelGreatMorale") );
@@ -2386,9 +2396,11 @@
 			thisNode.antiAirFire.forEach(function(fire){
 				if(!!fire){
 					var fireShipPos = fire.api_idx; // starts from 0
-					if(fireShipPos>=0 && fireShipPos<6){
-						var sentFleet = PlayerManager.fleets[KC3SortieManager.fleetSent-1];
-						var shipName = KC3ShipManager.get(sentFleet.ships[fireShipPos]).name();
+					// fireShipPos = [0,5]: in normal fleet or main fleet
+					// fireShipPos = [6,11]: in escort fleet
+					if(fireShipPos>=0 && fireShipPos<12){
+						var sentFleet = PlayerManager.fleets[fireShipPos>=6 ? 1 : KC3SortieManager.fleetSent-1];
+						var shipName = KC3ShipManager.get(sentFleet.ships[fireShipPos % 6]).name();
 						aaciTips += (!!aaciTips ? "\n" : "") + shipName;
 					}
 					var itemList = fire.api_use_items;

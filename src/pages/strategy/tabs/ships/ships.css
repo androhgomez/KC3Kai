@@ -246,6 +246,8 @@
 }
 .tab_ships .ship_item .ship_kekkon-color {
 	color: #E49F9C;
+	text-shadow: #fff -1px -1px 1px, #fff 1px 1px 0px;
+	-webkit-font-smoothing: antialiased;
 }
 .tab_ships .ship_item .ship_kekkon:after {
 	display: inline;
@@ -261,6 +263,10 @@
 	background-repeat: no-repeat;
 	text-align: right;
 }
+.tab_ships .ship_item .ship_onfleet-color1 {background: #90D4ED !important;}
+.tab_ships .ship_item .ship_onfleet-color2 {background: #BBDDBA !important;}
+.tab_ships .ship_item .ship_onfleet-color3 {background: #E8E68F !important;}
+.tab_ships .ship_item .ship_onfleet-color4 {background: #F6D0A0 !important;}
 .tab_ships .ship_item .ship_name {
 	width:92px;
 	overflow:hidden;

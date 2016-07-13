@@ -455,6 +455,16 @@ Previously known as "Reactor"
 			KC3Network.trigger("Fleet");
 		},
 		
+		// Equipment swap
+		"api_req_kaisou/slot_deprive": function(params, response, headers){
+			var ShipFrom = KC3ShipManager.get(params.api_unset_ship);
+			var ShipTo = KC3ShipManager.get(params.api_set_ship);
+			ShipFrom.items = response.api_data.api_ship_data.api_unset_ship.api_slot;
+			ShipTo.items = response.api_data.api_ship_data.api_set_ship.api_slot;
+			KC3ShipManager.save();
+			KC3Network.trigger("Fleet");
+		},
+		
 		/* Fleet list
 		-------------------------------------------------------*/
 		"api_get_member/deck":function(params, response, headers){
@@ -918,7 +928,7 @@ Previously known as "Reactor"
 		"api_req_quest/clearitemget": function(params, response, headers){
 			var 
 				ctime    = Date.safeToUtcTime(headers.Date),
-				quest    = params.api_quest_id,
+				quest    = Number(params.api_quest_id),
 				data     = response.api_data,
 				material = data.api_material,
 				consume  = [0,0,0,0],
@@ -950,7 +960,12 @@ Previously known as "Reactor"
 		/* Stop Quest
 		-------------------------------------------------------*/
 		"api_req_quest/stop":function(params, response, headers){
-			
+			var quest = Number(params.api_quest_id);
+			// Restore to Open but Not Active
+			KC3QuestManager.get(quest).status = 1;
+			KC3QuestManager.save();
+			// Trigger quest listeners
+			KC3Network.trigger("Quests");
 		},
 		
 		/*-------------------------------------------------------*/
@@ -1372,9 +1387,14 @@ Previously known as "Reactor"
 				rsc   = [0,0,0,0,0,0,0,0],
 				ctime = Date.safeToUtcTime(headers.Date);
 			$.each(params.api_slotitem_ids.split("%2C"), function(index, itemId){
-				KC3GearManager.get(itemId).master().api_broken.forEach(function(x,i){
+				var gearMaster = KC3GearManager.get(itemId).master();
+				gearMaster.api_broken.forEach(function(x,i){
 					rsc[i] += x;
 				});
+				// F34: Weekly Scrap Anti-Air Guns
+				if([21].indexOf(gearMaster.api_type[2]) >-1){
+					KC3QuestManager.get(638).increment();
+				}
 				KC3GearManager.remove( itemId );
 			});
 			KC3GearManager.save();
